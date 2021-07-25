@@ -14,6 +14,8 @@ class CabinNights:
     
     needsLifeguard = []         # List of Cabin Nights that need lifeguards
     
+    spikeballOrBucketball = ["Spikeball", "Spikeball", "Bucketball", "Bucketball"]  # List to represent that Spikeball and Bucketball can only be assigned to 2 different cabins
+    
     assignments = {}            # Dictionary where key will be cabins (or double cabin combos) and values will be their assignment
     
     staff = None
@@ -104,7 +106,7 @@ class CabinNights:
             CabinNights.cabinsThatRequested.append(cabin)
             
         for cabin in CabinNights.totalCabins:    
-            camp = self.whichCamp(cabin)
+            camp = self.whichCamp(int(cabin))
             if camp == 'M':
                 assignment = self.campM
             elif camp == '1':
@@ -172,7 +174,7 @@ class CabinNights:
         else:
             self.DONEWITHREQUESTED = True
             choice = random.choice(CabinNights.totalCabins)
-        camp = self.whichCamp(choice)
+        camp = self.whichCamp(int(choice))
         if camp == 'M':
             assignment = self.campM
         elif camp == '1':
@@ -221,12 +223,28 @@ class CabinNights:
             cabins = cabin.split(',')
             cabin2 = cabins[1]   
             cabin1 = cabins[0]
-        
+            # print("CABIN1", cabin1)
+            # print("CABIN2", cabin2)
+            if int(cabin2) in CabinNights.cabinsThatRequested and int(cabin1) not in CabinNights.cabinsThatRequested:
+                temp = cabin1
+                cabin1 = cabin2
+                cabin2 = temp
+
+        # print("CABIN1", cabin1)
+        # print("CABIN2", cabin2)
+        # print("CABINSTHATREQUESTED", CabinNights.cabinsThatRequested)
+        # print(cabin2 in CabinNights.cabinsThatRequested)
+        # print(cabin1 not in CabinNights.cabinsThatRequested)
         row = CabinNights.requests.loc[(CabinNights.requests["What cabin are you in?"] == int(cabin1))]
+        # print("CABIN1", cabin1)
+        # print("CABIN2", cabin2)
+        # print(row)
         lifeguard = row.values[0,3]
         lifeguardStaff = row.values[0,4]
+        # print("LIFEGUARD",lifeguard)
+        # print("LIFEGUARDSTAFF",lifeguardStaff)
         # print(cabin1, lifeguardStaff, lifeguardStaff == CabinNights.staff)
-        if lifeguard == "Yes" and lifeguardStaff == CabinNights.staff or lifeguardStaff == "Both":
+        if (lifeguard == "Yes" and lifeguardStaff == CabinNights.staff) or lifeguardStaff == "Both":
             return True
         if cabin2 == "":
             return False
@@ -237,7 +255,7 @@ class CabinNights:
         lifeguard = row.values[0,3]
         lifeguardStaff = row.values[0,4]
         # print(cabin2, lifeguardStaff, lifeguardStaff == CabinNights.staff)
-        if lifeguard == "Yes" and lifeguardStaff == CabinNights.staff or lifeguardStaff == "Both":
+        if (lifeguard == "Yes" and lifeguardStaff == CabinNights.staff) or lifeguardStaff == "Both":
             return True
         return False
             
@@ -246,16 +264,32 @@ class CabinNights:
         # Calls chooseCabinRandom function to decide which cabin(s) is assigned next
         # After a cabin is assigned, dictionaryUpdater is called and its row is then nremoved from the table
         # No return value
-        
+        # i = 1
         while len(CabinNights.totalCabins) > 0:
+            # print(i)
+            # i += 1
             lastCabinNight = ""
             done = False
-            primChoice = CabinNights.chooseCabinRandom(self,requestsTable) 
+            success = False
+            doubleCabinNight = False
+            # if i > 2:
+            #     if len(primChoice) > 2:
+            #         print("CHOICE",self.assignments[int(choice)])
+            #     else:
+            #     print("PRIMCHOICE",primChoice, self.assignments[primChoice])
+                
+            primChoice = CabinNights.chooseCabinRandom(self,requestsTable)
+            # print("PRIMCHOICECABIN", primChoice)
+            # print("CABINSTHATREQUESTED", CabinNights.cabinsThatRequested)
+            # print("TOTALCABINS", CabinNights.totalCabins)
             if self.DONEWITHREQUESTED == False:          
                 lifeguardBool = CabinNights.lifeguardCheck(self, requestsTable, primChoice)
             else:
                 lifeguardBool = False
+            # print("LIFEGUARDBOOL", lifeguardBool)
+            # print("DONEWITHREQUESTED", self.DONEWITHREQUESTED)
             if len(primChoice) > 2:
+                doubleCabinNight = True
                 temp = primChoice.split(',')
                 # print("Cabins", temp[0],temp[1])
                 # print("cabinsThatRequested", CabinNights.cabinsThatRequested)
@@ -279,6 +313,17 @@ class CabinNights:
                     prefs = prefs.split(', ')
                 else:
                     prefs = list(set(CabinNights.potentialLocations.keys()))
+                camp = self.whichCamp(int(choice))
+                if camp == 'M':
+                    assignment = self.campM
+                elif camp == '1':
+                    assignment = self.camp1
+                elif camp == '2':
+                    assignment = self.camp2
+                elif camp == '3':
+                    assignment = self.camp3
+                else:
+                    assignment = self.camp4
             else:
                 if self.DONEWITHREQUESTED == False:
                     row = CabinNights.requests.loc[(CabinNights.requests["What cabin are you in?"] == int(primChoice))]
@@ -287,9 +332,27 @@ class CabinNights:
                     prefs = prefs.split(', ')
                 else:
                     prefs = random.sample(list(CabinNights.potentialLocations.keys()), len(list(CabinNights.potentialLocations.keys())))
+                camp = self.whichCamp(int(primChoice))
+                if camp == 'M':
+                    assignment = self.campM
+                elif camp == '1':
+                    assignment = self.camp1
+                elif camp == '2':
+                    assignment = self.camp2
+                elif camp == '3':
+                    assignment = self.camp3
+                else:
+                    assignment = self.camp4
+            
+            # print("CAMP", camp)
+            # print("ASSIGNMENT", assignment)
             # print(primChoice)
             # print(self.DONEWITHREQUESTED)
             # print(prefs)
+            
+            if "Camp Night" in assignment:
+                continue
+            
             for each in prefs:
                 if (each == "Sharkstooth Pile" or each == "Field Games"):
                     if len(primChoice) > 2:
@@ -298,6 +361,13 @@ class CabinNights:
                     else:
                         if int(primChoice) > 28:
                             continue
+                if (each == "Drip Drip Drop"):
+                        if len(primChoice) > 2:
+                            if int(primChoice.split(',')[0]) > 36:
+                                continue
+                        else:
+                            if int(primChoice) > 28:
+                                continue
                 if each == lastCabinNight:
                     continue
                 potentials = CabinNights.potentialLocations[each]
@@ -307,10 +377,23 @@ class CabinNights:
                     if loc in CabinNights.availableLocations:
                         if each in CabinNights.needsLifeguard and lifeguardBool == False:
                             continue
+                        if (each == "Spikeball" and "Spikeball" not in CabinNights.spikeballOrBucketball):
+                            continue
+                        elif (each == "Bucketball" and "Bucketball" not in CabinNights.spikeballOrBucketball):
+                            continue
                         success = CabinNights.dictionaryUpdater(self, primChoice, each, loc)
                         done = True
+                        # print("SUCCESSCHECK", success)
                         if success == True:
                             CabinNights.availableLocations.remove(loc)
+                            if each == "Spikeball" or each == "Bucketball":
+                                # print("EACH", each)
+                                # print("SOB", CabinNights.spikeballOrBucketball)
+                                if doubleCabinNight == True:
+                                    CabinNights.spikeballOrBucketball = list(filter(lambda a: a != each, CabinNights.spikeballOrBucketball))
+                                else:
+                                    CabinNights.spikeballOrBucketball.remove(each)
+                                # print("SOB2", CabinNights.spikeballOrBucketball)
                 # print("DONE", done, primChoice, each, loc) 
                 if done == True:
                     break  
@@ -320,20 +403,45 @@ class CabinNights:
                     # print(each, primChoice, int(primChoice) > 28)
                     if (each == "Sharkstooth Pile" or each == "Field Games") and int(primChoice) > 28:
                         continue
+                    if (each == "Drip Drip Drop") and int(primChoice) > 36:
+                        continue
                     if each == lastCabinNight:
                         continue
                     potentials = CabinNights.potentialLocations[each]
-                for loc in potentials:
-                    if loc in CabinNights.availableLocations:
-                        if each in CabinNights.needsLifeguard and lifeguardBool == False:
-                            continue
-                        success = CabinNights.dictionaryUpdater(self, primChoice, each, loc)
-                        done = True
-                        if success == True:
-                            CabinNights.availableLocations.remove(loc)
-                if done == True:
-                    break
+                    for loc in potentials:
+                        if done == True:
+                            break
+                        if loc in CabinNights.availableLocations:
+                            if each in CabinNights.needsLifeguard and lifeguardBool == False:
+                                continue
+                            if (each == "Spikeball" and "Spikeball" not in CabinNights.spikeballOrBucketball):
+                                continue
+                            elif (each == "Bucketball" and "Bucketball" not in CabinNights.spikeballOrBucketball):
+                                continue
+                            # print("SUCCESS", success)
+                            # print("DONE-MID", done)
+                            # print("EACH", each)
+                            success = CabinNights.dictionaryUpdater(self, primChoice, each, loc)
+                            done = True
+                            if success == True:
+                                CabinNights.availableLocations.remove(loc)
+                                if each == "Spikeball" or each == "Bucketball":
+                                    # print("EACH", each)
+                                    # print("SOB", CabinNights.spikeballOrBucketball)
+                                    if doubleCabinNight == True:
+                                        CabinNights.spikeballOrBucketball = list(filter(lambda a: a != each, CabinNights.spikeballOrBucketball))
+                                    else:
+                                        CabinNights.spikeballOrBucketball.remove(each)
+                                 # print("SOB2", CabinNights.spikeballOrBucketball)
+                    # print("DONE2", done, success, primChoice, each, loc)
+                    if done == True:
+                        # print("BREAK")
+                        break
+            # print("#############", len(CabinNights.totalCabins))
+        # print("HERE")
         return
+    
+    # TODO fix assignments for cabins with camp nights
     
     def outputDictionary(self):
         # Sorts the dictionary keys in numerical order and then returns the assignments in an easily digestible format
